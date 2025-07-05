@@ -2,23 +2,21 @@ import React, { useState } from 'react';
 import { Modal } from 'react-native';
 
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const lifelines = [
   {
     label: 'Alternate Question',
-    icon: <Ionicons name="swap-horizontal" size={24} color="#fff" />,
+    icon: '🔁',
     description: 'This lifeline gives you an alternate question of the same difficulty level.',
   },
   {
     label: '50-50',
-    icon: <MaterialCommunityIcons name="percent-outline" size={24} color="#fff" />,
+    icon: '🌗',
     description: 'This lifeline removes two incorrect options.',
   },
   {
     label: 'Second Chance',
-    icon: <MaterialCommunityIcons name="backup-restore" size={24} color="#fff" />,
+    icon: '✌️',
     description: 'This lifeline gives you another chance if your first answer is wrong.',
   },
 ];
@@ -71,15 +69,18 @@ export default function App() {
         {/* Center Content */}
         <View style={styles.center}>
           <View style={styles.lifelines}>
-            {lifelines.map((lifeline, i) => (
-              <TouchableOpacity
-                key={i}
-                style={styles.lifelineButton}
-                onPress={() => setSelectedLifeline(lifeline)}
-              >
-                {lifeline.icon}
-              </TouchableOpacity>
-            ))}
+            {lifelines.map((lifeline, i) => {
+              return (
+                <TouchableOpacity
+                  key={i}
+                  style={styles.lifelineButton}
+                  onPress={() => setSelectedLifeline(lifeline)}
+                >
+                  <Text>{lifeline.icon}</Text>
+                </TouchableOpacity>
+              );
+            })}
+
           </View>
 
           <View style={styles.questionBox}>
@@ -88,7 +89,7 @@ export default function App() {
 
           <View style={styles.options}>
             {['Paris', 'London', 'Berlin', 'Madrid'].map((opt, i) => (
-              <TouchableOpacity key={i} style={styles.optionButton} onPress={() => setSelectedOption(opt)}>
+              <TouchableOpacity key={i} style={styles.optionButton} onPress={() => setSelectedOption({ label: opt, description: 'You selected ' + opt })}>
                 <Text style={styles.optionText}>{opt}</Text>
               </TouchableOpacity>
             ))}
