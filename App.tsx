@@ -175,7 +175,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '',
+    backgroundColor: '#ede7f6',
   },
   header: {
     paddingVertical: 20,
@@ -237,8 +237,8 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#7f8c8d',
     borderRadius: 30,
-    width: 50,
-    height: 50,
+    width: 60,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
   },
