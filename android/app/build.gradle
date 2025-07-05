@@ -105,6 +105,15 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    defaultConfig {
+        applicationId "com.ezquizmasterui"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        
+        manifestPlaceholders = [appAuthRedirectScheme: "com.ezquizmasterui"]
+    }
 }
 
 dependencies {

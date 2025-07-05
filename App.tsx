@@ -1,7 +1,48 @@
-import React, { useState } from 'react';
-import { Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Alert, Modal } from 'react-native';
 
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { authorize } from 'react-native-app-auth';
+
+const config = {
+  issuer: 'https://accounts.google.com',
+    clientId: '640364919747-oq0j62vjbisqo55iammafe2v8s26jlq6.apps.googleusercontent.com',
+  redirectUrl: 'com.ezquizmasterui:/oauth2redirect/google',
+  scopes: ['openid', 'profile', 'email'],
+};
+
+const signInWithGoogle = async () => {
+  try {
+    const result = await authorize(config);
+    console.log('✅ SUCCESS: ', result);
+  } catch (error) {
+    console.log('❌ ERROR (Google Auth):', JSON.stringify(error, null, 2));
+  }
+};
+
+
+async function loginWithGoogle() {
+  try {
+    const authState = await authorize(config);
+    console.log('Access Token:', authState.accessToken);
+    console.log('ID Token:', authState.idToken);
+
+    // Call your Spring Boot backend with the token
+    const response = await fetch('http://192.168.0.25:8080/ezquizmaster/api/quiz/start', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${authState.idToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const result = await response.text();
+    console.log('Quiz Started:', result);
+  } catch (error) {
+    console.error('OAuth2 Login Error', error);
+  }
+}
+
+
 
 const lifelines = [
   {
@@ -33,7 +74,7 @@ const Sidebar = ({
   const displayItems = reverseOrder ? [...items].reverse() : items;
 
   return (
-    <ScrollView contentContainerStyle={styles.sidebarContainer} showsVerticalScrollIndicator>
+    <ScrollView contentContainerStyle={styles.sidebarContainer} showsVerticalScrollIndicator={false}>
       <Text style={styles.sidebarLabel}>{label}</Text>
       {displayItems.map((num) => (
         <View key={num} style={styles.tile}>
@@ -43,134 +84,6 @@ const Sidebar = ({
     </ScrollView>
   );
 };
-
-export default function App() {
-  const questionNumbers = Array.from({ length: 15 }, (_, i) => i + 1);
-  const scores = Array.from({ length: 15 }, (_, i) => i + 1);
-  const [selectedLifeline, setSelectedLifeline] = useState<null | { label: string; description: string }>(null);
-  const [selectedOption, setSelectedOption] = useState<null | { label: string; description: string }>(null);
-
-
-
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>ez Quiz Master</Text>
-      </View>
-
-      {/* Main Content */}
-      <View style={styles.main}>
-        {/* Left Sidebar */}
-        <View style={styles.sidebar}>
-          <Sidebar label="Qnos" items={questionNumbers} />
-        </View>
-
-        {/* Center Content */}
-        <View style={styles.center}>
-          <View style={styles.lifelines}>
-            {lifelines.map((lifeline, i) => {
-              return (
-                <TouchableOpacity
-                  key={i}
-                  style={styles.lifelineButton}
-                  onPress={() => setSelectedLifeline(lifeline)}
-                >
-                  <Text>{lifeline.icon}</Text>
-                </TouchableOpacity>
-              );
-            })}
-
-          </View>
-
-          <View style={styles.questionBox}>
-            <Text style={styles.questionText}>What is the capital of France?</Text>
-          </View>
-
-          <View style={styles.options}>
-            {['Paris', 'London', 'Berlin', 'Madrid'].map((opt, i) => (
-              <TouchableOpacity key={i} style={styles.optionButton} onPress={() => setSelectedOption({ label: opt, description: 'You selected ' + opt })}>
-                <Text style={styles.optionText}>{opt}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Right Sidebar */}
-        <View style={styles.sidebar}>
-          <Sidebar label="Scores" items={scores} reverseOrder />
-        </View>
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>© 2025 ez Quiz Master. All rights reserved.</Text>
-      </View>
-
-
-      {selectedLifeline && (
-        <Modal transparent={true} animationType="fade" visible={true}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalBox}>
-              <Text style={styles.modalTitle}>{selectedLifeline.label}</Text>
-              <Text style={styles.modalDescription}>{selectedLifeline.description}</Text>
-              <View style={styles.modalButtons}>
-                <TouchableOpacity style={styles.modalCancel} onPress={() => setSelectedLifeline(null)}>
-                  <Text style={styles.modalButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.modalUse}
-                  onPress={() => {
-                    // handle lifeline use
-                    setSelectedLifeline(null);
-                  }}
-                >
-                  <Text style={styles.modalButtonText}>Use '{selectedLifeline.label}'</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
-      {selectedOption && (
-        <Modal transparent={true} animationType="fade" visible={true}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalBox}>
-              <Text style={styles.modalTitle}>Confirm Answer</Text>
-              <Text style={styles.modalDescription}>
-                Are you sure you want to submit this answer, or would you like to rethink or use a lifeline?
-              </Text>
-
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={styles.modalCancel}
-                  onPress={() => setSelectedOption(null)} // Close modal
-                >
-                  <Text style={styles.modalButtonText}>Rethink</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.modalUse}
-                  onPress={() => {
-                    // Add your submission logic here
-                    console.log('Submitted answer:', selectedOption);
-                    setSelectedOption(null); // Close modal
-                  }}
-                >
-                  <Text style={styles.modalButtonText}>Submit</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
-
-
-
-
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
   container: {
@@ -335,3 +248,161 @@ const styles = StyleSheet.create({
   },
 
 });
+
+export default function App() {
+  const questionNumbers = Array.from({ length: 15 }, (_, i) => i + 1);
+  const scores = Array.from({ length: 15 }, (_, i) => i + 1);
+
+  const [selectedLifeline, setSelectedLifeline] = useState<null | { label: string; description: string }>(null);
+  const [selectedOption, setSelectedOption] = useState<null | { label: string; description: string }>(null);
+  const [quizStarted, setQuizStarted] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<any>(null);
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState<any>(null);
+
+
+
+
+
+  const fetchQuestion = async (index: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/ezquizmaster/api/quiz/getQuestion?number=${index + 1}`);
+      if (!response.ok) throw new Error('Failed to fetch question');
+
+      const questionData = await response.json();
+      setCurrentQuestion(questionData);
+      setQuestionIndex(index);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to load question');
+    }
+  };
+
+  useEffect(() => {
+    signInWithGoogle();
+  }, []);
+
+  const handleAnswerSubmit = () => {
+    console.log('Submitted answer:', selectedOption);
+    setSelectedOption(null);
+
+    if (questionIndex + 1 < 15) {
+      fetchQuestion(questionIndex + 1);
+    } else {
+      Alert.alert('Quiz Completed', 'You have finished all questions!');
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerText}>ez Quiz Master</Text>
+      </View>
+
+      {/* Main Content */}
+      <View style={styles.main}>
+        {/* Left Sidebar */}
+        <View style={styles.sidebar}>
+          <Sidebar label="Qnos" items={questionNumbers} />
+        </View>
+
+        {/* Center */}
+        <View style={styles.center}>
+          {/* Lifelines */}
+          <View style={styles.lifelines}>
+            {lifelines.map((lifeline, i) => (
+              <TouchableOpacity
+                key={i}
+                style={styles.lifelineButton}
+                onPress={() => setSelectedLifeline(lifeline)}
+              >
+                <Text>{lifeline.icon}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Question */}
+          <View style={styles.questionBox}>
+            <Text style={styles.questionText}>
+              {currentQuestion ? currentQuestion.questionText : 'Loading question...'}
+            </Text>
+          </View>
+
+          {/* Options */}
+          <View style={styles.options}>
+            {currentQuestion?.options?.map((opt: string, i: number) => (
+              <TouchableOpacity
+                key={i}
+                style={styles.optionButton}
+                onPress={() =>
+                  setSelectedOption({ label: opt, description: 'You selected ' + opt })
+                }
+              >
+                <Text style={styles.optionText}>{opt}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Right Sidebar */}
+        <View style={styles.sidebar}>
+          <Sidebar label="Scores" items={scores} reverseOrder />
+        </View>
+      </View>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>© 2025 ez Quiz Master. All rights reserved.</Text>
+      </View>
+
+      {/* Lifeline Modal */}
+      {selectedLifeline && (
+        <Modal transparent animationType="fade" visible>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>{selectedLifeline.label}</Text>
+              <Text style={styles.modalDescription}>{selectedLifeline.description}</Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity style={styles.modalCancel} onPress={() => setSelectedLifeline(null)}>
+                  <Text style={styles.modalButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalUse}
+                  onPress={() => {
+                    // Implement lifeline logic
+                    setSelectedLifeline(null);
+                  }}
+                >
+                  <Text style={styles.modalButtonText}>Use '{selectedLifeline.label}'</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* Option Confirmation Modal */}
+      {selectedOption && (
+        <Modal transparent animationType="fade" visible>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>Confirm Answer</Text>
+              <Text style={styles.modalDescription}>
+                Are you sure you want to submit this answer, or would you like to rethink or use a lifeline?
+              </Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity style={styles.modalCancel} onPress={() => setSelectedOption(null)}>
+                  <Text style={styles.modalButtonText}>Rethink</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalUse} onPress={handleAnswerSubmit}>
+                  <Text style={styles.modalButtonText}>Submit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+    </View>
+  );
+}
