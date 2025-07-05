@@ -50,6 +50,8 @@ export default function App() {
   const questionNumbers = Array.from({ length: 15 }, (_, i) => i + 1);
   const scores = Array.from({ length: 15 }, (_, i) => i + 1);
   const [selectedLifeline, setSelectedLifeline] = useState<null | { label: string; description: string }>(null);
+  const [selectedOption, setSelectedOption] = useState<null | { label: string; description: string }>(null);
+
 
 
   return (
@@ -86,7 +88,7 @@ export default function App() {
 
           <View style={styles.options}>
             {['Paris', 'London', 'Berlin', 'Madrid'].map((opt, i) => (
-              <TouchableOpacity key={i} style={styles.optionButton}>
+              <TouchableOpacity key={i} style={styles.optionButton} onPress={() => setSelectedOption(opt)}>
                 <Text style={styles.optionText}>{opt}</Text>
               </TouchableOpacity>
             ))}
@@ -129,6 +131,42 @@ export default function App() {
           </View>
         </Modal>
       )}
+      {selectedOption && (
+        <Modal transparent={true} animationType="fade" visible={true}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>Confirm Answer</Text>
+              <Text style={styles.modalDescription}>
+                Are you sure you want to submit this answer, or would you like to rethink or use a lifeline?
+              </Text>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancel}
+                  onPress={() => setSelectedOption(null)} // Close modal
+                >
+                  <Text style={styles.modalButtonText}>Rethink</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalUse}
+                  onPress={() => {
+                    // Add your submission logic here
+                    console.log('Submitted answer:', selectedOption);
+                    setSelectedOption(null); // Close modal
+                  }}
+                >
+                  <Text style={styles.modalButtonText}>Submit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+
+
+
     </View>
   );
 }
@@ -280,7 +318,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    backgroundColor: '#bdc3c7',
+    backgroundColor: '#34495e',
     borderRadius: 5,
   },
   modalUse: {
